@@ -115,3 +115,26 @@ Mỗi nhóm trả lời 2 câu:
 
 1. Case nào nên dùng multi-agent? Vì sao?
 2. Case nào không nên dùng multi-agent? Vì sao?
+
+### Trả lời (dựa trên `reports/benchmark_report.md` của repo này)
+
+**1. Nên dùng multi-agent khi:** câu hỏi cần **evidence có nguồn trích dẫn được** và có thể tách
+rõ thành các bước retrieval → phân tích → viết. Trong benchmark thực tế của repo này (query về
+kiến trúc multi-agent), pipeline Researcher → Analyst → Writer đạt **citation coverage 100%** và
+quality score 10.0/10, so với baseline không trích dẫn được nguồn nào (citation coverage rỗng,
+quality 7.5/10) — vì baseline không có bước retrieval nên không có gì để cite, chỉ "nhớ" lại từ
+tri thức nội tại của model. Multi-agent đáng giá khi: (a) câu trả lời sai/không có nguồn là rủi ro
+cao (báo cáo kỹ thuật, tài liệu nội bộ cần audit được), (b) có một corpus/nguồn cụ thể phải bám
+sát thay vì để model tự bịa, (c) task đủ phức tạp để tách biệt "tìm gì" (Researcher) khỏi "đánh giá
+độ tin cậy" (Analyst) khỏi "viết sao cho rõ" (Writer) là có ý nghĩa thật, không chỉ chia cho có.
+
+**2. Không nên dùng multi-agent khi:** câu hỏi ngắn, câu trả lời có thể lấy trực tiếp từ tri thức
+sẵn có của model, không cần trích dẫn, và độ trễ/chi phí quan trọng hơn độ chắc chắn của nguồn.
+Cùng một query, multi-agent trong benchmark **chậm hơn baseline ~9.3s (6.87s → 16.16s)** và **tốn
+gấp ~3 lần chi phí token** (`$0.0003` → `$0.0009`) vì phải chạy 3 lượt LLM call thay vì 1, cộng
+thêm bước retrieval. Nếu task không có nhu cầu grounding thật sự (ví dụ: giải thích khái niệm phổ
+thông, brainstorm nhanh, câu hỏi mà baseline đã trả lời "đủ tốt"), phần chi phí/độ trễ thêm vào
+không đổi lại được lợi ích tương xứng — giống đúng điều `docs/design_template.md` mục "Why
+multi-agent?" đã nêu: multi-agent chỉ đáng khi task decomposition tạo ra nhu cầu thông tin/kiểm
+chứng thực sự khác nhau giữa các bước, nếu không thì overhead điều phối sẽ xóa sạch lợi ích chất
+lượng.
